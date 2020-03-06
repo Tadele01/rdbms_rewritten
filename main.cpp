@@ -50,22 +50,42 @@ void show_tables(){
 
 void drop_database(string dbname){
 	working_dir_mover();
-	if(rmdir(dbname) !=0){
+	const char* database_name = dbname.c_str();
+	if(rmdir(database_name) !=0){
 		cout << "Database does not exist" << endl;
 	}
-	
+	else{
+		cout << dbname << " database removed" << endl;
+	}
 }
 
 void create_database(string dbname){
-	if(mkdir(dbname, 0777) == -1){
+	working_dir_mover();	
+	const char* database_name = dbname.c_str();
+	if(mkdir(database_name, 0777) == -1){
 		cerr << "Error : "<< strerror(errno) << endl;
-	}	
+	}
+	cout << dbname << " database created" << endl;	
 }
 
 void use_database(string dbname){
 	working_dir_mover();
-	chdir(dbname);
-	cout << "database :" << dbname << endl;
+	const char* database_name = dbname.c_str();
+	chdir(database_name);
+	cout << "database changed to : " << dbname << endl;
+}
+
+void describe_table(string tablename){
+	char* current_dir;
+	string working_dir = "/home/tade/Documents/databases";
+	current_dir = get_current_dir_name();
+	string my_string(current_dir);
+	if(current_dir == working_dir){
+		cout << "please select a database" << endl;
+	}
+	else{
+		
+	}
 }
 string space_remover(string sql_query){
 	string temp;
@@ -104,7 +124,7 @@ int main(){
 		else if(formatted_sql_query!=""){
 			working_dir_mover();
 			
-			create_database(formatted_sql_query);
+			drop_database(formatted_sql_query);
 		}
 		cout<< "\n>> ";
 	}
