@@ -12,6 +12,32 @@ using namespace std;
 
 const int MIN_QUERY_SIZE = 2;
 const char* WORKING_DIR = "/home/tade/Documents/databases";
+enum keywords {
+		create,
+		table, 
+		values, 
+		database, 
+		use,
+		describe,
+		drop,
+		show,
+		databases,
+		tables, 
+		into, 
+		from,		
+		intersect,
+		_union,
+		crossproduct,
+		join,	
+		setdifference,
+		project
+	};
+enum identifiers{
+	Int,
+	String, 
+	Bool,
+	Char
+};
 void working_dir_mover(){
 	
 	chdir(WORKING_DIR);
@@ -99,7 +125,7 @@ void describe_table(string tablename){
 }
 
 void query_parser(string sql_query){
-	cout << "I received : " << sql_query << endl;
+	
 	
 }
 vector<string> vectorizer(string sql_query){
