@@ -9,6 +9,8 @@
 #include <iostream>
 #include <unistd.h>
 using namespace std;
+
+const int MIN_QUERY_SIZE = 2;
 const char* WORKING_DIR = "/home/tade/Documents/databases";
 void working_dir_mover(){
 	
@@ -71,8 +73,10 @@ void create_database(string dbname){
 void create_table(string tablename, string query){
 	ofstream table;
 	table.open(tablename+".csv");
+	table.open(tablename+"desc.csv");
 	
 }
+
 
 void use_database(string dbname){
 	working_dir_mover();
@@ -92,6 +96,21 @@ void describe_table(string tablename){
 	else{
 		
 	}
+}
+
+void query_parser(string sql_query){
+	cout << "I received : " << sql_query << endl;
+	
+}
+vector<string> vectorizer(string sql_query){
+	vector<string> vector_form;
+	istringstream stream(sql_query);
+	do{
+		string sub;
+		stream >> sub;
+		vector_form.push_back(sub);
+	}while(stream)
+	return vector_form;
 }
 string space_remover(string sql_query){
 	string temp;
@@ -128,7 +147,7 @@ int main(){
 			break;
 		}
 		else if(formatted_sql_query!=""){
-			working_dir_mover();
+			query_parser(formatted_sql_query);
 			
 		}
 		cout<< "\n>> ";
