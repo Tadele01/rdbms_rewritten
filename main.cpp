@@ -10,34 +10,31 @@
 #include <unistd.h>
 using namespace std;
 
-const int MIN_QUERY_SIZE = 2;
+const string QUERY_END = ";";
+const int MIN_QUERY_SIZE = 3;
 const char* WORKING_DIR = "/home/tade/Documents/databases";
-enum keywords {
-		create,
-		table, 
-		values, 
-		database, 
-		use,
-		describe,
-		drop,
-		show,
-		databases,
-		tables, 
-		into, 
-		from,		
-		intersect,
-		_union,
-		crossproduct,
-		join,	
-		setdifference,
-		project
-	};
-enum identifiers{
-	Int,
-	String, 
-	Bool,
-	Char
-};
+vector<string> keywords = {
+		"create",
+		"table", 
+		"values", 
+		"database", 
+		"use",
+		"describe",
+		"drop",
+		"show",
+		"databases",
+		"tables", 
+		"into", 
+		"from",		
+		"intersect",
+		"union",
+		"crossproduct",
+		"join",	
+		"setdifference",
+		"project" };
+
+vector<string> identifiers = {"int", "string", "bool", "char"};
+
 void working_dir_mover(){
 	
 	chdir(WORKING_DIR);
@@ -123,11 +120,6 @@ void describe_table(string tablename){
 		
 	}
 }
-
-void query_parser(string sql_query){
-	
-	
-}
 vector<string> vectorizer(string sql_query){
 	vector<string> vector_form;
 	istringstream stream(sql_query);
@@ -135,9 +127,52 @@ vector<string> vectorizer(string sql_query){
 		string sub;
 		stream >> sub;
 		vector_form.push_back(sub);
-	}while(stream)
+	}while(stream);
+	vector_form.pop_back();
 	return vector_form;
 }
+void generate_error(int code){
+	cout<<"error_code: "<<code<<" : ";
+    switch(code){
+        case 0: cout<<"Table not present\n";
+            break;
+        case 1: cout<<"Column name not present in table\n";
+            break;
+        case 2: cout<<"No of column does not match\n";
+            break;
+        case 3: cout<<"Condition specified not present in table\n";
+            break;
+        case 4: cout<<"Wrong condition operation\n";
+            break;
+        case 5: cout<<"Insert semicolon at the end of a query\n";
+            break;
+        case 6: cout<<"Syntax error in query\n";
+            break;
+        case 7: cout<<"Multiple columns with same name please perform Rename operation\n";
+            break;
+        case 8: cout<<"Relations are Union incompatible\n";
+            break;
+    }
+    exit(0);
+
+}
+
+void query_parser(string sql_query){
+	vector<string> vector_form = vectorizer(sql_query);
+	int query_size = vector_form.size();
+	int last_index = query_size - 1;
+	string semi_colon = vector_form[last_index];
+	int checker = semi_colon.compare(QUERY_END);
+	if(query_size < MIN_QUERY_SIZE ){
+		cout << checker;
+		generate_error(6);
+		
+	}
+	if (checker){
+		generate_error(5);
+	}
+}
+
 string space_remover(string sql_query){
 	string temp;
 	istringstream stream(sql_query);
