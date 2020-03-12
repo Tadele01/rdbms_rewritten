@@ -68,6 +68,12 @@ void create_database(string dbname){
 	cout << dbname << " database created" << endl;	
 }
 
+void create_table(string tablename, string query){
+	ofstream table;
+	table.open(tablename+".csv");
+	
+}
+
 void use_database(string dbname){
 	working_dir_mover();
 	const char* database_name = dbname.c_str();
@@ -124,7 +130,6 @@ int main(){
 		else if(formatted_sql_query!=""){
 			working_dir_mover();
 			
-			drop_database(formatted_sql_query);
 		}
 		cout<< "\n>> ";
 	}
