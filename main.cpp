@@ -12,6 +12,7 @@ using namespace std;
 
 const string QUERY_END = ";";
 const int MIN_QUERY_SIZE = 3;
+const int MAX_KEYWORD_SIZE = 3;
 const char* WORKING_DIR = "/home/tade/Documents/databases";
 vector<string> keywords = {
 		"create",
@@ -152,25 +153,51 @@ void generate_error(int code){
             break;
         case 8: cout<<"Relations are Union incompatible\n";
             break;
-    }
-    exit(0);
+    };
 
 }
+
 
 void query_parser(string sql_query){
 	vector<string> vector_form = vectorizer(sql_query);
 	int query_size = vector_form.size();
 	int last_index = query_size - 1;
 	string semi_colon = vector_form[last_index];
-	int checker = semi_colon.compare(QUERY_END);
-	if(query_size < MIN_QUERY_SIZE ){
-		cout << checker;
+	string first = vector_form[0];
+	if(query_size < MIN_QUERY_SIZE){
 		generate_error(6);
-		
 	}
-	if (checker){
+	
+	if (semi_colon.compare(QUERY_END) != 0){
 		generate_error(5);
 	}
+	else if(query_size == 3){
+		string db_or_table = vector_form[1];
+		if(db_or_table.compare("tables") == 0){
+			show_tables();
+		}	
+		else if(db_or_table.compare("databases") == 0){
+			show_databases();
+		}
+		else if(first.compare("use") == 0){
+			string name = vector_form[1];
+			use_database(name);
+		}
+	}
+	else if(first.compare("create") == 0){
+		string table_or_db = vector_form[1];
+		string name = vector_form[2];
+		if(table_or_db.compare("table") == 0){
+			create_table(name, "kiki ");	
+		}
+		else if(table_or_db.compare("database") == 0){
+			create_database(name);
+		}
+		else{
+			generate_error(6);
+		}
+	}
+	
 }
 
 string space_remover(string sql_query){
@@ -208,6 +235,7 @@ int main(){
 			break;
 		}
 		else if(formatted_sql_query!=""){
+			working_dir_mover();
 			query_parser(formatted_sql_query);
 			
 		}
