@@ -35,10 +35,24 @@ vector<string> keywords = {
 		"project" };
 
 vector<string> identifiers = {"int", "string", "bool", "char"};
-
+void generate_error(int code);
+vector<string> create_table_helper(vector<string> vector_form);
 void working_dir_mover(){
 	
 	chdir(WORKING_DIR);
+}
+bool is_working_dir(){
+	char* current_dir;
+	string working_dir = "/home/tade/Documents/databases";
+	current_dir = get_current_dir_name();
+	string my_string(current_dir);
+	string dir_ak = current_dir;
+	if(dir_ak.compare(working_dir) == 0){
+		return true;
+	}
+	else{
+		return false;
+	}
 }
 void show_databases(){
 	DIR *dir = opendir(WORKING_DIR);
@@ -52,11 +66,10 @@ void show_databases(){
 }
 
 void show_tables(){
-	char* current_dir;
-	string working_dir = "/home/tade/Documents/databases";
-	current_dir = get_current_dir_name();
+	bool is_working = is_working_dir();
+	char* current_dir = get_current_dir_name();
 	string my_string(current_dir);
-	if(current_dir == working_dir){
+	if(is_working){
 		cout << "please select a database" << endl;
 	}
 	else{
@@ -78,27 +91,36 @@ void drop_database(string dbname){
 	working_dir_mover();
 	const char* database_name = dbname.c_str();
 	if(rmdir(database_name) !=0){
-		cout << "Database does not exist" << endl;
+		generate_error(10);
 	}
 	else{
 		cout << dbname << " database removed" << endl;
 	}
 }
 
-void create_database(string dbname){
-	working_dir_mover();	
+void create_database(string dbname){	
+	working_dir_mover();
 	const char* database_name = dbname.c_str();
 	if(mkdir(database_name, 0777) == -1){
-		cerr << "Error : "<< strerror(errno) << endl;
+		generate_error(9);
 	}
-	cout << dbname << " database created" << endl;	
+	else{
+		cout << dbname << " database created" << endl;
+	}
 }
 
 void create_table(string tablename, string query){
-	ofstream table;
-	table.open(tablename+".csv");
-	table.open(tablename+"desc.csv");
-	
+	bool is_working = is_working_dir();
+	char* current_dir = get_current_dir_name();
+	string my_string(current_dir);
+	if(is_working){
+		cout << "please select a database" << endl;
+	}
+	else{
+		ofstream table;
+		ofstream table_desc;
+		table.open(tablename+".csv");
+	}	
 }
 
 
@@ -106,15 +128,14 @@ void use_database(string dbname){
 	working_dir_mover();
 	const char* database_name = dbname.c_str();
 	chdir(database_name);
-	cout << "database changed to : " << dbname << endl;
+	cout << "database changed to : " << database_name << endl;
 }
 
 void describe_table(string tablename){
-	char* current_dir;
-	string working_dir = "/home/tade/Documents/databases";
-	current_dir = get_current_dir_name();
+	bool is_working = is_working_dir();
+	char* current_dir = get_current_dir_name();
 	string my_string(current_dir);
-	if(current_dir == working_dir){
+	if(is_working){
 		cout << "please select a database" << endl;
 	}
 	else{
@@ -131,6 +152,31 @@ vector<string> vectorizer(string sql_query){
 	}while(stream);
 	vector_form.pop_back();
 	return vector_form;
+}
+
+vector<string> create_table_helper(vector<string> vector_form){
+	vector<string> new_vector;
+	vector<string> parsed;
+	int last_index = vector_form.size() - 2;
+	string comma = ",";
+	for(int i = 4; i < last_index; i++){
+		new_vector.push_back(vector_form[i]);
+	}
+	for(int i = 0; i < new_vector.size(); i++){
+		if(comma.compare(new_vector[i]) == 0){
+			if(parsed.size() == 2){
+				string dtype = parsed[1];
+				if(count(identifiers.begin(), identifiers.end(), dtype)){
+					return parsed;
+				}
+			}
+			else{
+				generate_error(6);
+			}
+		}
+		parsed.push_back(new_vector[i]);
+	}
+	return new_vector;
 }
 void generate_error(int code){
 	cout<<"error_code: "<<code<<" : ";
@@ -153,6 +199,10 @@ void generate_error(int code){
             break;
         case 8: cout<<"Relations are Union incompatible\n";
             break;
+		case 9: cout<<"Database already existed\n";
+			break;
+		case 10: cout<<"Database does not exist\n";
+			break;
     };
 
 }
@@ -179,16 +229,26 @@ void query_parser(string sql_query){
 		else if(db_or_table.compare("databases") == 0){
 			show_databases();
 		}
-		else if(first.compare("use") == 0){
-			string name = vector_form[1];
-			use_database(name);
-		}
+	}
+	else if(first.compare("use") == 0){
+		string name = vector_form[2];
+		use_database(name);
 	}
 	else if(first.compare("create") == 0){
 		string table_or_db = vector_form[1];
 		string name = vector_form[2];
 		if(table_or_db.compare("table") == 0){
-			create_table(name, "kiki ");	
+			string starting_brace = vector_form[3];
+			string closing_brace = vector_form[query_size - 2];
+			if(starting_brace.compare("(") ==0 and closing_brace.compare(")") == 0){
+				vector<string> query = create_table_helper(vector_form); 
+				for(auto i = query.begin() ; i != query.end(); i++)
+					cout << *i << endl;
+				create_table(name, "kiki ");	
+			}
+			else{
+				generate_error(6);		
+			}
 		}
 		else if(table_or_db.compare("database") == 0){
 			create_database(name);
@@ -197,6 +257,15 @@ void query_parser(string sql_query){
 			generate_error(6);
 		}
 	}
+	else if(first.compare("drop") == 0){
+		string db = vector_form[1];
+		string name = vector_form[2];	
+		if(db.compare("database") == 0){
+			drop_database(name);	
+		}
+		
+	}
+	
 	
 }
 
@@ -227,15 +296,15 @@ int main(){
 	string sql_query;
 	cout << "TQL..\n\n";
 	cout << ">> ";
+	working_dir_mover();
 	while(getline(cin, sql_query)){
 		string formatted_sql_query = input_formatter(sql_query);
 		boost::trim_right(formatted_sql_query);
 		if(formatted_sql_query=="exit"){
-			cout << "Good Bye \n";
+			cout << "Bye \n";
 			break;
 		}
 		else if(formatted_sql_query!=""){
-			working_dir_mover();
 			query_parser(formatted_sql_query);
 			
 		}
