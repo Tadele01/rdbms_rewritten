@@ -8,6 +8,7 @@
 #include <string.h>
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
 using namespace std;
 
 const string QUERY_END = ";";
@@ -70,7 +71,7 @@ void show_tables(){
 	char* current_dir = get_current_dir_name();
 	string my_string(current_dir);
 	if(is_working){
-		cout << "please select a database" << endl;
+		generate_error(12);
 	}
 	else{
 		DIR *dir;
@@ -109,17 +110,25 @@ void create_database(string dbname){
 	}
 }
 
-void create_table(string tablename, string query){
+void create_table(string tablename, vector<string> query){
 	bool is_working = is_working_dir();
 	char* current_dir = get_current_dir_name();
 	string my_string(current_dir);
+	int last_index = query.size() ;
 	if(is_working){
-		cout << "please select a database" << endl;
+		generate_error(12);
 	}
 	else{
-		ofstream table;
-		ofstream table_desc;
-		table.open(tablename+".csv");
+		fstream fout;
+		fout.open(tablename+".csv", ios::out | ios::app); 
+		for(int i = 1; i <= last_index; i++){
+			if(i%2 != 0){
+				fout << query[i - 1] << ":";
+			}
+			else{
+				fout << query[i - 1] << ",";
+			}
+		}
 	}	
 }
 
@@ -136,7 +145,7 @@ void describe_table(string tablename){
 	char* current_dir = get_current_dir_name();
 	string my_string(current_dir);
 	if(is_working){
-		cout << "please select a database" << endl;
+		generate_error(12);
 	}
 	else{
 		
@@ -157,6 +166,7 @@ vector<string> vectorizer(string sql_query){
 vector<string> create_table_helper(vector<string> vector_form){
 	vector<string> new_vector;
 	vector<string> parsed;
+	vector<string> collector;
 	int last_index = vector_form.size() - 2;
 	string comma = ",";
 	for(int i = 4; i < last_index; i++){
@@ -167,16 +177,22 @@ vector<string> create_table_helper(vector<string> vector_form){
 			if(parsed.size() == 2){
 				string dtype = parsed[1];
 				if(count(identifiers.begin(), identifiers.end(), dtype)){
-					return parsed;
+					collector.insert(collector.end(), parsed.begin(), parsed.end());
+					parsed.erase(parsed.begin(), parsed.end());
+				}
+				else{
+					generate_error(11);
 				}
 			}
 			else{
 				generate_error(6);
 			}
 		}
-		parsed.push_back(new_vector[i]);
+		else{
+			parsed.push_back(new_vector[i]);
+		}
 	}
-	return new_vector;
+	return collector;
 }
 void generate_error(int code){
 	cout<<"error_code: "<<code<<" : ";
@@ -202,6 +218,10 @@ void generate_error(int code){
 		case 9: cout<<"Database already existed\n";
 			break;
 		case 10: cout<<"Database does not exist\n";
+			break;
+		case 11: cout<<"Undefined data type\n";
+			break;
+		case 12: cout<<"Please select a database\n";
 			break;
     };
 
@@ -242,9 +262,7 @@ void query_parser(string sql_query){
 			string closing_brace = vector_form[query_size - 2];
 			if(starting_brace.compare("(") ==0 and closing_brace.compare(")") == 0){
 				vector<string> query = create_table_helper(vector_form); 
-				for(auto i = query.begin() ; i != query.end(); i++)
-					cout << *i << endl;
-				create_table(name, "kiki ");	
+				create_table(name, query);	
 			}
 			else{
 				generate_error(6);		
