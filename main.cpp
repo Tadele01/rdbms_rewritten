@@ -37,7 +37,7 @@ vector<string> keywords = {
 
 vector<string> identifiers = {"int", "string", "bool", "char"};
 void generate_error(int code);
-vector<string> create_table_helper(vector<string> vector_form);
+vector<string> table_helper(vector<string> vector_form);
 void working_dir_mover(){
 	
 	chdir(WORKING_DIR);
@@ -129,6 +129,7 @@ void create_table(string tablename, vector<string> query){
 				fout << query[i - 1] << ",";
 			}
 		}
+		fout << "\n" ;
 	}	
 }
 
@@ -163,25 +164,31 @@ vector<string> vectorizer(string sql_query){
 	return vector_form;
 }
 
-vector<string> create_table_helper(vector<string> vector_form){
+vector<string> table_helper(vector<string> vector_form, int start_index, int flag){
 	vector<string> new_vector;
 	vector<string> parsed;
 	vector<string> collector;
 	int last_index = vector_form.size() - 2;
 	string comma = ",";
-	for(int i = 4; i < last_index; i++){
+	for(int i = start_index; i < last_index; i++){
 		new_vector.push_back(vector_form[i]);
 	}
 	for(int i = 0; i < new_vector.size(); i++){
 		if(comma.compare(new_vector[i]) == 0){
 			if(parsed.size() == 2){
-				string dtype = parsed[1];
-				if(count(identifiers.begin(), identifiers.end(), dtype)){
-					collector.insert(collector.end(), parsed.begin(), parsed.end());
-					parsed.erase(parsed.begin(), parsed.end());
+				if(flag){
+					string dtype = parsed[1];
+					if(count(identifiers.begin(), identifiers.end(), dtype)){
+						collector.insert(collector.end(), parsed.begin(), parsed.end());
+						parsed.erase(parsed.begin(), parsed.end());
+					}
+					else{
+						generate_error(11);
+					}
 				}
 				else{
-					generate_error(11);
+					collector.insert(collector.end(), parsed.begin(), parsed.end());
+					parsed.erase(parsed.begin(), parsed.end());	
 				}
 			}
 			else{
@@ -194,6 +201,10 @@ vector<string> create_table_helper(vector<string> vector_form){
 	}
 	return collector;
 }
+int table_not_exists(){
+	return 0;
+}
+
 void generate_error(int code){
 	cout<<"error_code: "<<code<<" : ";
     switch(code){
@@ -223,11 +234,29 @@ void generate_error(int code){
 			break;
 		case 12: cout<<"Please select a database\n";
 			break;
+		case 13: cout<<"Invalid table name\n";
+			break;
     };
 
 }
 
-
+void insert_values(string tablename, vector<string> query){
+	bool is_working = is_working_dir();
+	char* current_dir = get_current_dir_name();
+	string my_string(current_dir);
+	int last_index = query.size() ;
+	if(is_working){
+		generate_error(12);
+	}
+	else{
+		fstream fout;
+		fout.open(tablename+".csv", ios::out | ios::app); 
+		for(int i = 0; i < last_index; i++){
+			fout << query[i] << ",";
+		}
+		fout << "\n" ;
+	}	
+}
 void query_parser(string sql_query){
 	vector<string> vector_form = vectorizer(sql_query);
 	int query_size = vector_form.size();
@@ -261,7 +290,7 @@ void query_parser(string sql_query){
 			string starting_brace = vector_form[3];
 			string closing_brace = vector_form[query_size - 2];
 			if(starting_brace.compare("(") ==0 and closing_brace.compare(")") == 0){
-				vector<string> query = create_table_helper(vector_form); 
+				vector<string> query = table_helper(vector_form, 4, 1); 
 				create_table(name, query);	
 			}
 			else{
@@ -283,7 +312,24 @@ void query_parser(string sql_query){
 		}
 		
 	}
-	
+	else if(first.compare("insert") == 0 ){
+		string into = vector_form[1];
+		string tablename = vector_form[2];
+		string values = vector_form[3];
+		string starting_brace = vector_form[4];
+		string closing_brace = vector_form[query_size - 2];
+		if(count(keywords.begin(), keywords.end(), tablename)){
+			generate_error(13);
+		}
+		if(table_not_exists()){
+			generate_error(0);
+		}
+		if(starting_brace.compare("(") ==0 and closing_brace.compare(")") == 0){
+			vector<string> query = table_helper(vector_form, 5, 0);
+			insert_values(tablename, query);	
+		}
+		
+	}
 	
 }
 
@@ -312,9 +358,8 @@ string input_formatter(string sql_query){
 }
 int main(){	
 	string sql_query;
-	cout << "TQL..\n\n";
-	cout << ">> ";
 	working_dir_mover();
+	cout<< "\n>> ";
 	while(getline(cin, sql_query)){
 		string formatted_sql_query = input_formatter(sql_query);
 		boost::trim_right(formatted_sql_query);
