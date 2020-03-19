@@ -15,6 +15,8 @@ const string QUERY_END = ";";
 const int MIN_QUERY_SIZE = 3;
 const int MAX_KEYWORD_SIZE = 3;
 const char* WORKING_DIR = "/home/tade/Documents/databases";
+const string single2 = ".";
+const string double2 = "..";
 vector<string> keywords = {
 		"create",
 		"table", 
@@ -59,8 +61,15 @@ void show_databases(){
 	DIR *dir = opendir(WORKING_DIR);
 	struct dirent *entry = readdir(dir);
 	while (entry != NULL){
-		if(entry->d_type == DT_DIR)
-			printf("%s\n", entry->d_name);
+		if(entry->d_type == DT_DIR){
+			char *name = entry->d_name;
+			string my_string(name);
+			if(double2.compare(name) != 0 and single2.compare(name) != 0){
+				printf("%s\n", name);
+			}
+			
+		}
+			
 		entry = readdir(dir);
 	}
 	closedir(dir);
@@ -78,7 +87,23 @@ void show_tables(){
 		struct dirent *ent;
 		if((dir = opendir(current_dir)) != NULL){
 			while((ent = readdir(dir)) != NULL){
-				printf("%s\n", ent->d_name);
+				char *name = ent->d_name;
+				string my_string(name);
+				if(double2.compare(name) != 0 and single2.compare(name) != 0){
+					int i = 0;
+					string subname;
+					while(name[i] != '\0' ){
+						if(name[i] == '.'){
+							break;
+						}	
+						else{
+							subname = name[i];
+						}
+						i++;
+					}
+					string my_string(subname);
+					printf("%s\n", subname);
+				}
 			}
 			closedir(dir);
 		}
