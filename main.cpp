@@ -86,23 +86,18 @@ void show_tables(){
 		DIR *dir;
 		struct dirent *ent;
 		if((dir = opendir(current_dir)) != NULL){
+			string subname;
+			string real_name;
+			string empty = " ";
 			while((ent = readdir(dir)) != NULL){
 				char *name = ent->d_name;
 				string my_string(name);
+				real_name = name;
 				if(double2.compare(name) != 0 and single2.compare(name) != 0){
 					int i = 0;
-					string subname;
-					while(name[i] != '\0' ){
-						if(name[i] == '.'){
-							break;
-						}	
-						else{
-							subname = name[i];
-						}
-						i++;
-					}
-					string my_string(subname);
-					printf("%s\n", subname);
+					size_t pos = real_name.find(".");
+					subname = real_name.replace(real_name.begin() + pos, real_name.end(), empty);
+					cout << subname << endl;
 				}
 			}
 			closedir(dir);
@@ -155,6 +150,7 @@ void create_table(string tablename, vector<string> query){
 			}
 		}
 		fout << "\n" ;
+		cout << tablename << " created" << endl;
 	}	
 }
 
@@ -276,8 +272,11 @@ void insert_values(string tablename, vector<string> query){
 	else{
 		fstream fout;
 		fout.open(tablename+".csv", ios::out | ios::app); 
-		for(int i = 0; i < last_index; i++){
-			fout << query[i] << ",";
+		for(int i = 1; i < last_index; i ++){
+			if(i%2 != 0){
+				fout << query[i] << ",";
+				
+			}	
 		}
 		fout << "\n" ;
 	}	
